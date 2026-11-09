@@ -151,9 +151,21 @@ export default function App() {
     if (active) play(active);
   };
 
+  const stop = useCallback(() => {
+    teardown();
+    setActiveId(null);
+    setReady(false);
+    setNeedGesture(false);
+    setStatus('');
+  }, [teardown]);
+
   useEffect(() => {
     // keyboard: up/down to move through the visible list
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        stop();
+        return;
+      }
       if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
       const list = visible;
       if (!list.length) return;
@@ -166,7 +178,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible, activeId, play]);
+  }, [visible, activeId, play, stop]);
 
   const renderItem = (c: Chan) => (
     <button
@@ -175,11 +187,17 @@ export default function App() {
       onClick={() => play(c)}
       title={c.name}
     >
-      <span
-        className="mono"
-        style={{ ['--h' as any]: hueFrom(c.group || c.name) + 'deg' }}
-      >
-        {initials(c.name)}
+      <span className="tile" style={{ ['--h' as any]: hueFrom(c.group || c.name) + 'deg' }}>
+        <span className="mono">{initials(c.name)}</span>
+        <img
+          className="logo"
+          src={`/logos/${c.id}.png`}
+          alt=""
+          loading="lazy"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = 'none';
+          }}
+        />
       </span>
       <span className="chan-name">{c.name}</span>
       {c.region === 'pt' && <span className="ptbadge">PT</span>}
@@ -227,13 +245,19 @@ export default function App() {
         <section className="stage">
           <div className={'screen' + (active?.type === 'radio' ? ' is-radio' : '')}>
             <video ref={videoRef} playsInline controls preload="metadata" />
+            {active && (
+              <button className="stopbtn" onClick={stop} title="Parar (Esc)" aria-label="Parar">
+                <span className="sq" />
+                Parar
+              </button>
+            )}
             {active?.type === 'radio' && (
               <div className="radio-art" aria-hidden="true">
                 <div className="bars">
                   <span /><span /><span /><span /><span /><span /><span />
                 </div>
                 <div className="radio-title">{active.name}</div>
-                <div className="radio-sub">RTP Rádio · em direto</div>
+                <div className="radio-sub">{active.group} · em direto</div>
               </div>
             )}
             {!active && (

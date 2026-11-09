@@ -84,6 +84,8 @@ This project does **not** host, store or redistribute any media. It is a player 
 
 Use it for **personal viewing**. Do not operate a public relay that re-streams broadcaster content to third parties, and do not use it to circumvent geographic restrictions you are not entitled to bypass. If you add channels, make sure you have the right to access them from where you run the stack.
 
+Channel logos under `web/public/logos/` are the trademarks of their respective broadcasters, included solely to identify each channel; they are not part of this project's branding.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

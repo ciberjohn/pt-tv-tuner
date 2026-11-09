@@ -123,14 +123,28 @@ body {
 }
 .chan-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 
-.mono {
+.tile {
+  position: relative;
   flex: none;
-  width: 34px; height: 34px; border-radius: 10px;
+  width: 38px; height: 38px; border-radius: 11px;
+  overflow: hidden;
+  background: #eef1f7;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.tile .mono {
+  position: absolute; inset: 0;
   display: grid; place-items: center;
   font-size: 12px; font-weight: 800; letter-spacing: .02em;
   color: #fff;
   background: linear-gradient(135deg, hsl(var(--h, 12) 70% 46%), hsl(var(--h, 12) 70% 32%));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.tile .logo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  padding: 3px;
+  background: #eef1f7;
 }
 
 .ptbadge {
@@ -166,6 +180,17 @@ body {
   display: grid; place-items: center; font-size: 22px; color: var(--accent);
   border: 1px solid var(--line); background: var(--panel);
 }
+
+.stopbtn {
+  position: absolute; top: 10px; right: 10px; z-index: 6;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(10, 12, 17, 0.72); color: #fff;
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 7px 12px; font-weight: 700; font-size: 13px; cursor: pointer;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.stopbtn:hover { border-color: var(--accent); color: #fff; }
+.stopbtn .sq { width: 9px; height: 9px; border-radius: 2px; background: var(--accent); }
 
 .radio-art {
   position: absolute; inset: 0; display: grid; place-content: center; gap: 18px; text-align: center;
@@ -203,21 +228,25 @@ body {
 /* ---------- responsive ---------- */
 @media (max-width: 820px) {
   .layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 14px;
     padding: 14px 14px 18px;
   }
   .rail {
     order: 2;
+    margin-top: auto;
     display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden;
     padding-bottom: 6px; scroll-snap-type: x proximity;
   }
   .rail .group-label { display: none; }
-  .chan { width: auto; flex: none; scroll-snap-align: start; }
+  .chan { width: auto; flex: none; scroll-snap-align: start; padding: 6px; }
+  .tile { width: 48px; height: 48px; border-radius: 12px; }
   .chan-name { display: none; }
   .screen { border-radius: 12px; }
   .stage { order: 1; }
   .meta h1 { font-size: 18px; }
+  .foot { margin-top: 12px; }
   .topbar { padding: 12px 14px; }
   .brand-sub { display: none; }
 }
