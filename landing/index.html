@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PT TV Tuner — live Portuguese TV &amp; radio</title>
+<meta name="description" content="An open-source, self-hosted player for live Portuguese TV and radio. Docker stack, runs anywhere." />
+<style>
+  :root{
+    --bg:#0a0c11; --bg2:#0e1118; --panel:#12151d; --panel2:#171b25; --line:#232838; --line2:#1b2030;
+    --text:#e8ebf3; --muted:#8891a5; --muted2:#5f6879; --accent:#ff5a4d; --accent-soft:rgba(255,90,77,.14);
+    --radius:18px; --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);color:var(--text);line-height:1.55;
+    background:
+      radial-gradient(1100px 560px at 82% -8%, rgba(255,90,77,.12), transparent 60%),
+      radial-gradient(900px 480px at -8% 108%, rgba(70,110,255,.08), transparent 55%),
+      linear-gradient(180deg,var(--bg2),var(--bg));
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  header.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line2)}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft),0 0 18px 2px rgba(255,90,77,.5)}
+  .nav-links{display:flex;gap:18px;align-items:center;color:var(--muted);font-size:14px;font-weight:600}
+  .nav-links a:hover{color:var(--text)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;font-weight:700;font-size:15px;
+    border:1px solid var(--line);transition:transform .06s ease,filter .15s ease}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:var(--panel)}
+  .btn.ghost:hover{border-color:var(--line2)}
+  .hero{padding:64px 0 34px;text-align:center}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent);background:var(--accent-soft);border:1px solid rgba(255,90,77,.3);padding:6px 12px;border-radius:999px}
+  h1{font-size:clamp(32px,5.2vw,56px);line-height:1.05;letter-spacing:-1px;margin:20px auto 14px;max-width:16ch;font-weight:850}
+  .lead{color:var(--muted);font-size:clamp(16px,2vw,19px);max-width:62ch;margin:0 auto 28px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .shot{margin:38px 0 8px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 40px 100px -40px rgba(0,0,0,.85);background:var(--panel)}
+  .shot img{display:block;width:100%;height:auto}
+  section{padding:56px 0}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px}
+  h2{font-size:clamp(24px,3.2vw,34px);letter-spacing:-.5px;margin:0 0 10px}
+  .sub{color:var(--muted);max-width:64ch;margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h3{margin:0 0 6px;font-size:16px}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .card .ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px;
+    background:var(--accent-soft);color:var(--accent);border:1px solid rgba(255,90,77,.25);margin-bottom:12px}
+  .cols{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center}
+  .list{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;margin:0;padding:0;list-style:none;color:var(--muted);font-size:14px}
+  .list li{padding:7px 0;border-bottom:1px solid var(--line2)}
+  .list li b{color:var(--text);font-weight:700}
+  .steps{counter-reset:s;display:grid;gap:12px;margin:0;padding:0;list-style:none}
+  .steps li{counter-increment:s;position:relative;padding:16px 18px 16px 56px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+  .steps li::before{content:counter(s);position:absolute;left:16px;top:15px;width:26px;height:26px;border-radius:50%;
+    display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff;background:var(--accent)}
+  code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  pre{background:#05070b;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;margin:10px 0 0}
+  pre code{color:#cfe3ff}
+  .note{color:var(--muted2);font-size:13px;border-left:2px solid var(--line);padding-left:14px;margin-top:22px}
+  .mobile{display:flex;justify-content:center}
+  .mobile img{width:min(300px,80%);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow,0 30px 80px -30px #000)}
+  footer{border-top:1px solid var(--line2);padding:30px 0 60px;color:var(--muted2);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  @media(max-width:860px){.grid{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}.list{grid-template-columns:1fr}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}.nav-links .hide{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="nav">
+    <div class="brand"><span class="dot"></span> PT TV Tuner</div>
+    <nav class="nav-links">
+      <a href="#how" class="hide">How to run</a>
+      <a href="#channels" class="hide">Channels</a>
+      <a class="btn ghost" href="https://github.com/ciberjohn/pt-tv-tuner">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="badge">● Open source · Docker</span>
+    <h1>Live Portuguese TV &amp; radio, in the browser.</h1>
+    <p class="lead">A sleek, self-hosted player for RTP channels, TVI, CNN Portugal and the RTP radio family. One Docker stack, runs on Windows, macOS, Linux — and any device with a browser.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/ciberjohn/pt-tv-tuner">Get the code</a>
+      <a class="btn ghost" href="#how">How to run it</a>
+    </div>
+    <div class="shot"><img src="/shots/desktop.png" alt="PT TV Tuner desktop UI" /></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">What it does</div>
+    <h2>Everything you need to tune in</h2>
+    <p class="sub">Built to be resilient: the channel list is data, playback falls back gracefully, and a small proxy handles the headers browsers can't set.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">📺</div><h3>Live TV</h3><p>RTP 1, RTP 3, RTP Açores, RTP Madeira, RTP Mundo, TVI and CNN Portugal.</p></div>
+      <div class="card"><div class="ico">📻</div><h3>RTP radio</h3><p>Antena 1/2/3, the regional stations, Lusitânia, Fado, Jazzin, Ópera and Zig Zag.</p></div>
+      <div class="card"><div class="ico">🔀</div><h3>“Canais só-PT” toggle</h3><p>Reveals channels limited to Portuguese connections, with a clear explanation when egress isn't in PT.</p></div>
+      <div class="card"><div class="ico">🐳</div><h3>One command</h3><p><code>docker compose up -d --build</code> — nothing else to install.</p></div>
+      <div class="card"><div class="ico">📱</div><h3>Responsive</h3><p>Clean on desktop and phone; the channel rail becomes a swipeable strip.</p></div>
+      <div class="card"><div class="ico">🛡️</div><h3>Hardened</h3><p>Non-root containers, dropped capabilities, read-only FS, CSP and a host-allowlisted proxy.</p></div>
+    </div>
+  </section>
+
+  <section id="channels">
+    <div class="eyebrow">Channel lineup</div>
+    <h2>What you can watch and hear</h2>
+    <div class="cols">
+      <ul class="list">
+        <li><b>RTP 1</b></li><li><b>RTP 3</b></li>
+        <li><b>RTP Açores</b></li><li><b>RTP Madeira</b></li>
+        <li><b>RTP Mundo</b></li><li><b>TVI</b></li>
+        <li><b>CNN Portugal</b></li><li><b>Antena 1 · 2 · 3</b></li>
+        <li><b>RTP Fado · Jazzin · Ópera</b></li><li><b>RTP Lusitânia · Zig Zag</b></li>
+      </ul>
+      <div class="mobile"><img src="/shots/mobile.png" alt="PT TV Tuner on a phone" /></div>
+    </div>
+    <p class="note">Channels marked <b>PT</b> in the app (SIC, SIC Notícias, RTP 2, RTP Memória, RTP África, RTP Vida) are geo-restricted and only play when the host's connection is in Portugal.</p>
+  </section>
+
+  <section id="how">
+    <div class="eyebrow">Get started</div>
+    <h2>Run it in three steps</h2>
+    <ol class="steps">
+      <li>Clone the repository<pre><code>git clone https://github.com/ciberjohn/pt-tv-tuner.git
+cd pt-tv-tuner</code></pre></li>
+      <li>Start the stack (requires Docker + Compose)<pre><code>docker compose up -d --build</code></pre></li>
+      <li>Open it in your browser<pre><code>http://localhost:8090</code></pre></li>
+    </ol>
+    <p class="note">Change the port with <code>WEB_PORT=9090 docker compose up -d</code>. Add or edit channels in <code>data/channels.json</code>, then restart the proxy. Full details in the repository README.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Responsible use</div>
+    <h2>It's a player, not a broadcaster</h2>
+    <p class="sub">This project doesn't host or store any media. It streams from publicly reachable broadcaster endpoints, the same way a browser or media player does. The content belongs to the broadcasters and their terms apply — use it for personal viewing, and don't run it as a public relay. See the README for the full note.</p>
+    <div class="cta" style="justify-content:flex-start">
+      <a class="btn primary" href="https://github.com/ciberjohn/pt-tv-tuner">View on GitHub</a>
+    </div>
+  </section>
+
+  <footer>
+    <span>PT TV Tuner · MIT licensed</span>
+    <span><a href="https://github.com/ciberjohn/pt-tv-tuner">github.com/ciberjohn/pt-tv-tuner</a></span>
+  </footer>
+</div>
+</body>
+</html>

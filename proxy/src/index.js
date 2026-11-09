@@ -1,10 +1,17 @@
-// PT TV Tuner — zero-dependency HLS proxy.
+// PT TV Tuner — zero-dependency HLS proxy (hardened).
 // Fetches a channel's upstream playlist with browser-like headers, rewrites every
-// child URI (variant playlists, keys, maps, segments) to route back through /seg,
-// and streams segments through. Same-origin for the browser, so no CORS/Referer
-// problems, and the upstream host allowlist keeps it from being an SSRF gadget.
+// child URI back through /seg, and streams segments through. Same-origin for the
+// browser, so no CORS/Referer problems.
+//
+// Hardening applied after an independent DevSecOps review:
+//  - redirects handled manually and re-validated on every hop (no allowlist bypass)
+//  - https only, allowlisted hosts only, private/link-local IPs refused
+//  - malformed input can never crash the process (per-request try/catch + handlers)
+//  - upstream body size caps; content-type allowlist
+//  - GET/HEAD only; no wildcard CORS (same-origin app does not need it)
 import http from 'node:http';
 import { readFileSync } from 'node:fs';
+import { isIP } from 'node:net';
 
 const PORT = Number(process.env.PORT || 3000);
 const CHANNELS_FILE = process.env.CHANNELS_FILE || '/app/data/channels.json';
@@ -13,17 +20,69 @@ const UA =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 const REFERER = process.env.UPSTREAM_REFERER || 'https://www.rtp.pt/play/direto';
 const TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS || 15000);
+const MAX_REDIRECTS = 3;
+const MAX_PLAYLIST = 4 * 1024 * 1024;
+const MAX_SEGMENT = 64 * 1024 * 1024;
 
 // Only these registrable domains may be fetched (SSRF guard).
-const ALLOW = (process.env.ALLOW_HOSTS ||
-  'rtp.pt,iol.pt,impresa.pt,githubusercontent.com')
+const ALLOW = (process.env.ALLOW_HOSTS || 'rtp.pt,iol.pt,impresa.pt,githubusercontent.com')
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
+const PLAYLIST_TYPES = ['application/vnd.apple.mpegurl', 'application/x-mpegurl', 'audio/mpegurl'];
+const SAFE_TYPES = new Set([
+  ...PLAYLIST_TYPES,
+  'video/mp2t',
+  'video/mp4',
+  'audio/aac',
+  'audio/mp4',
+  'audio/mpeg',
+  'image/jpeg',
+  'image/png',
+  'application/octet-stream',
+]);
+
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 function hostAllowed(host) {
   host = (host || '').toLowerCase();
   return ALLOW.some((s) => host === s || host.endsWith('.' + s));
+}
+
+function isPrivateIp(host) {
+  if (!isIP(host)) return false;
+  if (host.includes(':')) {
+    const h = host.toLowerCase();
+    return h === '::' || h === '::1' || h.startsWith('fe80') || h.startsWith('fc') || h.startsWith('fd');
+  }
+  const p = host.split('.').map(Number);
+  if (p.length !== 4 || p.some((n) => Number.isNaN(n))) return false;
+  if (p[0] === 10 || p[0] === 127 || p[0] === 0) return true;
+  if (p[0] === 169 && p[1] === 254) return true; // link-local + 169.254.169.254 metadata
+  if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return true;
+  if (p[0] === 192 && p[1] === 168) return true;
+  if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return true; // CGNAT
+  return false;
+}
+
+function validate(urlStr) {
+  let u;
+  try {
+    u = new URL(urlStr);
+  } catch {
+    return { err: 'bad url', status: 400 };
+  }
+  if (u.protocol !== 'https:') return { err: 'https only', status: 403 };
+  if (u.port && u.port !== '443') return { err: 'bad port', status: 403 };
+  if (!hostAllowed(u.hostname)) return { err: 'host not allowed', status: 403 };
+  if (isPrivateIp(u.hostname)) return { err: 'host not allowed', status: 403 };
+  return { u };
 }
 
 let CATALOG = [];
@@ -76,114 +135,143 @@ function upstreamHeaders() {
   };
 }
 
-async function fetchUpstream(url) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-  try {
-    return await fetch(url, { headers: upstreamHeaders(), redirect: 'follow', signal: ctrl.signal });
-  } finally {
-    clearTimeout(timer);
+// Follow up to MAX_REDIRECTS, re-validating scheme/host/port on EVERY hop.
+async function fetchFollow(urlStr) {
+  let cur = urlStr;
+  for (let i = 0; i <= MAX_REDIRECTS; i++) {
+    const v = validate(cur);
+    if (v.err) throw new HttpError(v.status, v.err);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    let up;
+    try {
+      up = await fetch(cur, { headers: upstreamHeaders(), redirect: 'manual', signal: ctrl.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if ([301, 302, 303, 307, 308].includes(up.status)) {
+      const loc = up.headers.get('location');
+      if (!loc) throw new HttpError(502, 'bad redirect');
+      cur = new URL(loc, cur).href; // re-validated at the top of the next loop
+      continue;
+    }
+    return { up, finalUrl: cur };
   }
+  throw new HttpError(502, 'too many redirects');
 }
 
-function send(res, status, headers, body) {
-  res.writeHead(status, {
-    'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'no-cache',
-    ...headers,
-  });
-  res.end(body);
+function send(res, status, headers, body, method) {
+  res.writeHead(status, { 'Cache-Control': 'no-cache', ...headers });
+  res.end(method === 'HEAD' ? undefined : body);
+}
+
+function safeContentType(ct) {
+  const base = (ct || '').split(';')[0].trim().toLowerCase();
+  return SAFE_TYPES.has(base) ? ct : 'application/octet-stream';
 }
 
 // Core: fetch a URL and either rewrite it as a playlist or stream it as bytes.
-async function serveUrl(rawUrl, res) {
-  let parsed;
+async function serveUrl(rawUrl, res, method) {
   try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad url');
-  }
-  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-    return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad protocol');
-  }
-  if (!hostAllowed(parsed.hostname)) {
-    return send(res, 403, { 'Content-Type': 'text/plain' }, 'host not allowed');
-  }
+    const { up, finalUrl } = await fetchFollow(rawUrl);
+    if (!up.ok) throw new HttpError(502, 'upstream status ' + up.status);
 
-  let up;
-  try {
-    up = await fetchUpstream(parsed.href);
+    const ct = (up.headers.get('content-type') || '').toLowerCase();
+    const isPlaylistHint = PLAYLIST_TYPES.some((t) => ct.includes(t)) || ct.includes('m3u');
+    const declared = Number(up.headers.get('content-length') || 0);
+    const cap = isPlaylistHint ? MAX_PLAYLIST : MAX_SEGMENT;
+    if (declared && declared > cap) throw new HttpError(502, 'upstream too large');
+
+    const buf = Buffer.from(await up.arrayBuffer());
+    if (buf.length > cap) throw new HttpError(502, 'upstream too large');
+
+    const head = buf.subarray(0, 7).toString('latin1');
+    const isPlaylist = isPlaylistHint || head === '#EXTM3U' || buf.includes('#EXTM3U');
+    if (isPlaylist) {
+      const out = rewritePlaylist(buf.toString('utf8'), up.url || finalUrl);
+      return send(res, 200, { 'Content-Type': 'application/vnd.apple.mpegurl' }, out, method);
+    }
+    return send(res, 200, { 'Content-Type': safeContentType(ct) }, buf, method);
   } catch (e) {
-    return send(res, 502, { 'Content-Type': 'text/plain' }, 'upstream error: ' + e.message);
+    const status = e instanceof HttpError ? e.status : 502;
+    // Never leak internal hostnames / resolver text to the client.
+    if (!(e instanceof HttpError)) console.error('[proxy] upstream error:', e.message);
+    return send(
+      res,
+      status,
+      { 'Content-Type': 'text/plain' },
+      status === 403 ? 'forbidden' : 'upstream error',
+      method,
+    );
   }
-  if (!up.ok) {
-    return send(res, 502, { 'Content-Type': 'text/plain' }, 'upstream status ' + up.status);
-  }
-
-  const ct = (up.headers.get('content-type') || '').toLowerCase();
-  const buf = Buffer.from(await up.arrayBuffer());
-  const head = buf.subarray(0, 7).toString('latin1');
-
-  const isPlaylist =
-    ct.includes('mpegurl') || ct.includes('m3u') || head === '#EXTM3U' || buf.includes('#EXTM3U');
-
-  if (isPlaylist) {
-    const text = buf.toString('utf8');
-    const out = rewritePlaylist(text, up.url || parsed.href);
-    return send(res, 200, { 'Content-Type': 'application/vnd.apple.mpegurl' }, out);
-  }
-
-  // Segment / key / binary — pass through, preserving type.
-  return send(res, 200, { 'Content-Type': ct || 'application/octet-stream' }, buf);
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const path = url.pathname;
-
-  if (req.method === 'OPTIONS') {
-    return send(res, 204, {
-      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
-    });
-  }
-
-  if (path === '/health') {
-    return send(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({ ok: true, channels: CATALOG.length }));
-  }
-
-  if (path === '/channels') {
-    const pub = CATALOG.map((c) => ({
-      id: c.id,
-      name: c.name,
-      type: c.type,
-      group: c.group,
-      region: c.region,
-    }));
-    return send(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify(pub));
-  }
-
-  if (path.startsWith('/stream/')) {
-    const id = decodeURIComponent(path.slice('/stream/'.length));
-    const ch = BY_ID.get(id);
-    if (!ch) return send(res, 404, { 'Content-Type': 'text/plain' }, 'unknown channel: ' + id);
-    return serveUrl(ch.source, res);
-  }
-
-  if (path === '/seg') {
-    const u = url.searchParams.get('u');
-    if (!u) return send(res, 400, { 'Content-Type': 'text/plain' }, 'missing u');
-    let abs;
-    try {
-      abs = dec(u);
-    } catch {
-      return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad u');
+  const method = req.method || 'GET';
+  try {
+    if (method === 'OPTIONS') {
+      return send(res, 204, {}, '', method);
     }
-    return serveUrl(abs, res);
-  }
+    if (method !== 'GET' && method !== 'HEAD') {
+      return send(res, 405, { 'Content-Type': 'text/plain', Allow: 'GET, HEAD' }, 'method not allowed', method);
+    }
 
-  if (path === '/') return send(res, 200, { 'Content-Type': 'text/plain' }, 'PT TV Tuner proxy');
-  return send(res, 404, { 'Content-Type': 'text/plain' }, 'not found');
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const path = url.pathname;
+
+    if (path === '/health') {
+      return send(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({ ok: true, channels: CATALOG.length }), method);
+    }
+
+    if (path === '/channels') {
+      const pub = CATALOG.map((c) => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        group: c.group,
+        region: c.region,
+      }));
+      return send(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify(pub), method);
+    }
+
+    if (path.startsWith('/stream/')) {
+      let id;
+      try {
+        id = decodeURIComponent(path.slice('/stream/'.length));
+      } catch {
+        return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad channel id', method);
+      }
+      const ch = BY_ID.get(id);
+      if (!ch) return send(res, 404, { 'Content-Type': 'text/plain' }, 'unknown channel', method);
+      return await serveUrl(ch.source, res, method);
+    }
+
+    if (path === '/seg') {
+      const u = url.searchParams.get('u');
+      if (!u) return send(res, 400, { 'Content-Type': 'text/plain' }, 'missing u', method);
+      let abs;
+      try {
+        abs = dec(u);
+      } catch {
+        return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad u', method);
+      }
+      return await serveUrl(abs, res, method);
+    }
+
+    if (path === '/') return send(res, 200, { 'Content-Type': 'text/plain' }, 'PT TV Tuner proxy', method);
+    return send(res, 404, { 'Content-Type': 'text/plain' }, 'not found', method);
+  } catch (e) {
+    console.error('[proxy] handler error:', e && e.message);
+    try {
+      send(res, 500, { 'Content-Type': 'text/plain' }, 'internal error', method);
+    } catch {
+      /* response already gone */
+    }
+  }
 });
+
+// A single bad request must never terminate the whole streaming service.
+process.on('unhandledRejection', (e) => console.error('[proxy] unhandledRejection:', e && e.message));
+process.on('uncaughtException', (e) => console.error('[proxy] uncaughtException:', e && e.message));
 
 server.listen(PORT, '0.0.0.0', () => console.log(`[proxy] listening on :${PORT}`));
