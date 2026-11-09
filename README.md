@@ -2,6 +2,8 @@
 
 A sleek, modern web player for **live Portuguese TV and radio**: twelve television channels and twenty radio stations, packaged as a self-contained Docker stack.
 
+The motivation is simple: keep up with the news and culture from home while living abroad, without turning it into a small IT project every time.
+
 ![PT TV Tuner screenshot](screenshot.png)
 
 It is **a player, not a host**: the app fetches publicly available live streams from the broadcasters' own endpoints and plays them in the browser. No media is stored or served from the project.
