@@ -11,6 +11,7 @@ It is **a player, not a host**: the app fetches publicly available live streams 
 - **Live TV**: RTP 1, RTP 3, RTP Açores, RTP Madeira, RTP Mundo, TVI, CNN Portugal.
 - **Live radio**: the RTP radio family (Antena 1/2/3, regional stations, Lusitânia, Fado, Jazzin, Ópera, Zig Zag) plus **Rádio Comercial, M80, Smooth FM, Cidade FM, Rádio Observador and TSF**.
 - **"Canais só-PT" toggle**: reveals channels that are limited to Portuguese connections (SIC, SIC Notícias, RTP 2, RTP Memória, RTP África, RTP Vida). They only play when the host's egress is in Portugal — otherwise the player explains why instead of failing silently.
+- **Stop anytime**: the red **■ Parar** button on the player (or `Esc`) ends the stream and returns to channel selection.
 - Responsive, dark, app-like UI. Keyboard `↑`/`↓` switches channels.
 - Resilient playback: native HLS on Safari/iOS, [hls.js](https://github.com/video-dev/hls.js) everywhere else.
 
