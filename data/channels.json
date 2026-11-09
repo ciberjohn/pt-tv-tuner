@@ -2,7 +2,7 @@
   "_comment": "Channel catalog. 'region' = world (always shown) | pt (hidden until the Portugal-only toggle is on). 'source' is resolved server-side by the proxy; the frontend never sees it. Sources verified from a UK IP 2026-11-09.",
   "channels": [
     { "id": "rtp1",        "name": "RTP 1",            "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/smil:rtp1HD.smil/playlist.m3u8" },
-    { "id": "rtp3",        "name": "RTP 3",            "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/livetvhlsDVR/rtpnHDdvr.smil/playlist.m3u8" },
+    { "id": "rtp3",        "name": "RTP Notícias",     "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/livetvhlsDVR/rtpnHDdvr.smil/playlist.m3u8" },
     { "id": "rtpacores",   "name": "RTP Açores",       "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/rtpacoresHD.smil/playlist.m3u8" },
     { "id": "rtpmadeira",  "name": "RTP Madeira",      "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/rtpmadeira.smil/playlist.m3u8" },
     { "id": "rtpmundo",    "name": "RTP Mundo",        "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/rtpi.smil/playlist.m3u8" },
