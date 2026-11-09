@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PT TV Tuner — live Portuguese TV &amp; radio</title>
-<meta name="description" content="An open-source, self-hosted player for live Portuguese TV and radio. Docker stack, runs anywhere." />
+<title>PT TV Tuner: live Portuguese TV &amp; radio</title>
+<meta name="description" content="An open-source, self-hosted player for twelve live Portuguese TV channels and twenty radio stations. Docker stack, runs anywhere." />
 <style>
   :root{
     --bg:#0a0c11; --bg2:#0e1118; --panel:#12151d; --panel2:#171b25; --line:#232838; --line2:#1b2030;
@@ -85,7 +85,7 @@
   <section class="hero">
     <span class="badge">● Open source · Docker</span>
     <h1>Live Portuguese TV &amp; radio, in the browser.</h1>
-    <p class="lead">A sleek, self-hosted player for RTP channels, TVI, CNN Portugal and the RTP radio family. One Docker stack, runs on Windows, macOS, Linux — and any device with a browser.</p>
+    <p class="lead">A sleek, self-hosted player for twelve Portuguese TV channels and twenty radio stations: the RTP family, TVI, CNN Portugal, SIC, TSF and Rádio Comercial. One Docker stack, runs on Windows, macOS, Linux, and any device with a browser.</p>
     <div class="cta">
       <a class="btn primary" href="https://github.com/ciberjohn/pt-tv-tuner">Get the code</a>
       <a class="btn ghost" href="#how">How to run it</a>
@@ -98,10 +98,10 @@
     <h2>Everything you need to tune in</h2>
     <p class="sub">Built to be resilient: the channel list is data, playback falls back gracefully, and a small proxy handles the headers browsers can't set.</p>
     <div class="grid">
-      <div class="card"><div class="ico">📺</div><h3>Live TV</h3><p>RTP 1, RTP 3, RTP Açores, RTP Madeira, RTP Mundo, TVI and CNN Portugal.</p></div>
-      <div class="card"><div class="ico">📻</div><h3>RTP radio</h3><p>Antena 1/2/3, the regional stations, Lusitânia, Fado, Jazzin, Ópera and Zig Zag.</p></div>
-      <div class="card"><div class="ico">🔀</div><h3>“Canais só-PT” toggle</h3><p>Reveals channels limited to Portuguese connections, with a clear explanation when egress isn't in PT.</p></div>
-      <div class="card"><div class="ico">🐳</div><h3>One command</h3><p><code>docker compose up -d --build</code> — nothing else to install.</p></div>
+      <div class="card"><div class="ico">📺</div><h3>Live TV</h3><p>Twelve channels: RTP 1, 2 and 3, Açores, Madeira, Mundo, Memória and África, plus TVI, CNN Portugal, SIC and SIC Notícias. The last five carry a PT badge.</p></div>
+      <div class="card"><div class="ico">📻</div><h3>Radio</h3><p>Twenty stations: Antena 1, 2 and 3, the Açores and Madeira relays, RTP Mundo and África Rádio, Lusitânia, Fado, Jazzin, Ópera, Zig Zag and RTP Vida, plus Rádio Comercial, M80, Smooth FM, Cidade FM, Rádio Observador and TSF.</p></div>
+      <div class="card"><div class="ico">🔀</div><h3>“Canais só-PT” toggle</h3><p>Shows or hides the six channels that expect a Portuguese connection. Each carries a PT badge, and the player explains a refusal instead of spinning.</p></div>
+      <div class="card"><div class="ico">🐳</div><h3>One command</h3><p><code>docker compose up -d --build</code>. Nothing else to install.</p></div>
       <div class="card"><div class="ico">📱</div><h3>Responsive</h3><p>Clean on desktop and phone; the channel rail becomes a swipeable strip.</p></div>
       <div class="card"><div class="ico">🛡️</div><h3>Hardened</h3><p>Non-root containers, dropped capabilities, read-only FS, CSP and a host-allowlisted proxy.</p></div>
       <div class="card"><div class="ico">⏹️</div><h3>Parar / Stop</h3><p>Press the red <b>■ Parar</b> button (or <kbd>Esc</kbd>) on the player to stop the stream and go back to choosing a channel.</p></div>
@@ -113,18 +113,17 @@
     <h2>What you can watch and hear</h2>
     <div class="cols">
       <ul class="list">
-        <li><b>RTP 1</b></li><li><b>RTP 3</b></li>
-        <li><b>RTP Açores</b></li><li><b>RTP Madeira</b></li>
-        <li><b>RTP Mundo</b></li><li><b>TVI</b></li>
-        <li><b>CNN Portugal</b></li><li><b>Antena 1 · 2 · 3</b></li>
-        <li><b>RTP Fado · Jazzin · Ópera</b></li><li><b>RTP Lusitânia · Zig Zag</b></li>
-        <li><b>Rádio Comercial</b></li><li><b>M80</b></li>
-        <li><b>Smooth FM</b></li><li><b>Cidade FM</b></li>
-        <li><b>TSF</b></li><li><b>Rádio Observador</b></li>
+        <li><b>RTP 1 · 2 · 3</b></li><li><b>RTP Açores · Madeira · Mundo</b></li>
+        <li><b>RTP Memória · África</b></li><li><b>TVI · CNN Portugal</b></li>
+        <li><b>SIC · SIC Notícias</b></li><li><b>Antena 1 · 2 · 3</b></li>
+        <li><b>Antena 1 Açores · 1 Madeira · 3 Madeira</b></li><li><b>RTP Lusitânia · Fado · Jazzin</b></li>
+        <li><b>RTP Ópera · Zig Zag · Vida</b></li><li><b>RTP Mundo Rádio · África Rádio</b></li>
+        <li><b>Rádio Comercial · M80</b></li><li><b>Smooth FM · Cidade FM</b></li>
+        <li><b>TSF · Rádio Observador</b></li>
       </ul>
       <div class="mobile"><img src="/shots/mobile.png?v=2" alt="PT TV Tuner on a phone" /></div>
     </div>
-    <p class="note">Channels marked <b>PT</b> in the app (SIC, SIC Notícias, RTP 2, RTP Memória, RTP África, RTP Vida) are geo-restricted and only play when the host's connection is in Portugal.</p>
+    <p class="note">Six entries carry a <b>PT</b> badge: RTP 2, RTP Memória, RTP África, SIC and SIC Notícias on television, and RTP Vida on radio. They expect a Portuguese connection, so whether they play depends on the host's egress. The badge is a warning, not a guarantee.</p>
   </section>
 
   <section id="how">
@@ -142,7 +141,7 @@ cd pt-tv-tuner</code></pre></li>
   <section>
     <div class="eyebrow">Responsible use</div>
     <h2>It's a player, not a broadcaster</h2>
-    <p class="sub">This project doesn't host or store any media. It streams from publicly reachable broadcaster endpoints, the same way a browser or media player does. The content belongs to the broadcasters and their terms apply — use it for personal viewing, and don't run it as a public relay. See the README for the full note.</p>
+    <p class="sub">This project doesn't host or store any media. It streams from publicly reachable broadcaster endpoints with the requests those endpoints expect. The content belongs to the broadcasters and their terms apply. Use it for personal viewing, and don't run it as a public relay. See the README for the full note.</p>
     <div class="cta" style="justify-content:flex-start">
       <a class="btn primary" href="https://github.com/ciberjohn/pt-tv-tuner">View on GitHub</a>
     </div>

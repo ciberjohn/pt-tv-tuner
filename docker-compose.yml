@@ -15,6 +15,7 @@ services:
     environment:
       PORT: "3000"
       CHANNELS_FILE: /app/data/channels.json
+      ALLOW_HOSTS: "${ALLOW_HOSTS:-rtp.pt,iol.pt,impresa.pt,githubusercontent.com,bauermedia.pt,sharp-stream.com,streamtheworld.com,tsf.pt}"
     volumes:
       - ./data/channels.json:/app/data/channels.json:ro
     networks:

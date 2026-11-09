@@ -1,6 +1,6 @@
 # PT TV Tuner
 
-A sleek, modern web player for **live Portuguese TV and radio** — RTP channels, plus TVI and CNN Portugal — packaged as a self-contained Docker stack.
+A sleek, modern web player for **live Portuguese TV and radio**: twelve television channels and twenty radio stations, packaged as a self-contained Docker stack.
 
 ![PT TV Tuner screenshot](screenshot.png)
 
@@ -8,9 +8,9 @@ It is **a player, not a host**: the app fetches publicly available live streams 
 
 ## What it does
 
-- **Live TV**: RTP 1, RTP 3, RTP Açores, RTP Madeira, RTP Mundo, TVI, CNN Portugal.
-- **Live radio**: the RTP radio family (Antena 1/2/3, regional stations, Lusitânia, Fado, Jazzin, Ópera, Zig Zag) plus **Rádio Comercial, M80, Smooth FM, Cidade FM, Rádio Observador and TSF**.
-- **"Canais só-PT" toggle**: reveals channels that are limited to Portuguese connections (SIC, SIC Notícias, RTP 2, RTP Memória, RTP África, RTP Vida). They only play when the host's egress is in Portugal — otherwise the player explains why instead of failing silently.
+- **Live TV**: twelve channels, RTP 1, 2 and 3, Açores, Madeira, Mundo, Memória and África, plus TVI, CNN Portugal, SIC and SIC Notícias.
+- **Live radio**: twenty stations, the RTP radio family (Antena 1/2/3, the Açores and Madeira relays, RTP Mundo Rádio, RTP África Rádio, Lusitânia, Fado, Jazzin, Ópera, Zig Zag and RTP Vida) plus **Rádio Comercial, M80, Smooth FM, Cidade FM, Rádio Observador and TSF**.
+- **"Canais só-PT" toggle**: shows or hides the six channels that expect a Portuguese connection (RTP 2, RTP Memória, RTP África, SIC and SIC Notícias on television, and RTP Vida on radio). It is on by default so the whole line-up is visible, and every marked entry carries a PT badge. Whether a marked channel plays depends on the host's egress, so the player explains a refusal instead of failing silently. RTP 2 has been observed playing from the UK while SIC and SIC Notícias refused.
 - **Stop anytime**: the red **■ Parar** button on the player (or `Esc`) ends the stream and returns to channel selection.
 - Responsive, dark, app-like UI. Keyboard `↑`/`↓` switches channels.
 - Resilient playback: native HLS on Safari/iOS, [hls.js](https://github.com/video-dev/hls.js) everywhere else.
@@ -33,12 +33,13 @@ WEB_PORT=9090 docker compose up -d --build
 
 ## How it works
 
-Two small services:
+Three small services:
 
 | Service | Role |
 | --- | --- |
 | `web` | nginx serving the built React app and reverse-proxying stream routes to the proxy. |
 | `proxy` | A zero-dependency Node service that resolves a channel to its HLS playlist, fetches it with the headers broadcasters expect, rewrites every child URL back through itself, and streams segments through. |
+| `landing` | nginx serving the static landing page on its own port, so the project has a front door that is not the README. |
 
 The proxy exists because browsers cannot set the `Referer` / `User-Agent` some broadcasters require, and many streams do not send CORS headers. Routing everything through the same origin removes both problems. It also keeps the real source URLs server-side.
 
@@ -76,8 +77,10 @@ docker compose restart proxy
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `WEB_PORT` | `8090` | Host port for the web UI (bound to `127.0.0.1`). |
-| `WEB_BIND` | `127.0.0.1` | Host interface to bind. |
-| `ALLOW_HOSTS` | `rtp.pt,iol.pt,impresa.pt,githubusercontent.com` | Upstream domains the proxy may fetch (SSRF guard). |
+| `WEB_BIND` | `127.0.0.1` | Host interface for the web UI. |
+| `LANDING_PORT` | `8091` | Host port for the landing page (bound to `127.0.0.1`). |
+| `LANDING_BIND` | `127.0.0.1` | Host interface for the landing page. |
+| `ALLOW_HOSTS` | `rtp.pt,iol.pt,impresa.pt,githubusercontent.com,bauermedia.pt,sharp-stream.com,streamtheworld.com,tsf.pt` | Comma-separated domains the proxy may fetch, matched on the host or a subdomain (SSRF guard). Add a broadcaster's domain here before using one of its streams. |
 
 ## Legal & responsible use
 
@@ -89,4 +92,4 @@ Channel logos under `web/public/logos/` are the trademarks of their respective b
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT licence. See [LICENSE](LICENSE).
