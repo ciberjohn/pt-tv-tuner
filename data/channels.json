@@ -1,0 +1,33 @@
+{
+  "_comment": "Channel catalog. 'region' = world (always shown) | pt (hidden until the Portugal-only toggle is on). 'source' is resolved server-side by the proxy; the frontend never sees it. Sources verified from a UK IP 2026-11-09.",
+  "channels": [
+    { "id": "rtp1",        "name": "RTP 1",            "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/smil:rtp1HD.smil/playlist.m3u8" },
+    { "id": "rtp3",        "name": "RTP 3",            "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/livetvhlsDVR/rtpnHDdvr.smil/playlist.m3u8" },
+    { "id": "rtpacores",   "name": "RTP Açores",       "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/rtpacoresHD.smil/playlist.m3u8" },
+    { "id": "rtpmadeira",  "name": "RTP Madeira",      "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/rtpmadeira.smil/playlist.m3u8" },
+    { "id": "rtpmundo",    "name": "RTP Mundo",        "type": "tv",    "group": "RTP",  "region": "world", "source": "https://streaming-live.rtp.pt/liverepeater/rtpi.smil/playlist.m3u8" },
+    { "id": "tvi",         "name": "TVI",              "type": "tv",    "group": "TVI",  "region": "world", "source": "https://raw.githubusercontent.com/LITUATUI/M3UPT/main/M3U/TVI.m3u8" },
+    { "id": "cnnpt",       "name": "CNN Portugal",     "type": "tv",    "group": "CNN",  "region": "world", "source": "https://raw.githubusercontent.com/LITUATUI/M3UPT/main/M3U/CNN_Portugal.m3u8" },
+
+    { "id": "rtp2",        "name": "RTP 2",            "type": "tv",    "group": "RTP",  "region": "pt",    "source": "https://streaming-live.rtp.pt/liverepeater/rtp2HD.smil/playlist.m3u8" },
+    { "id": "rtpmemoria",  "name": "RTP Memória",      "type": "tv",    "group": "RTP",  "region": "pt",    "source": "https://streaming-live.rtp.pt/liverepeater/rtpmem.smil/playlist.m3u8" },
+    { "id": "rtpafrica",   "name": "RTP África",       "type": "tv",    "group": "RTP",  "region": "pt",    "source": "https://streaming-live.rtp.pt/liverepeater/rtpafrica.smil/playlist.m3u8" },
+    { "id": "sic",         "name": "SIC",              "type": "tv",    "group": "SIC",  "region": "pt",    "source": "https://sic.live.impresa.pt/sic1080p.m3u8" },
+    { "id": "sicnot",      "name": "SIC Notícias",     "type": "tv",    "group": "SIC",  "region": "pt",    "source": "https://sicnot.live.impresa.pt/sicnot.m3u8" },
+
+    { "id": "antena1",        "name": "Antena 1",          "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena180a/playlist.m3u8" },
+    { "id": "antena2",        "name": "Antena 2",          "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena280a/playlist.m3u8" },
+    { "id": "antena3",        "name": "Antena 3",          "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena380a/playlist.m3u8" },
+    { "id": "antena1acores",  "name": "Antena 1 Açores",   "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena1acores80a/playlist.m3u8" },
+    { "id": "antena1madeira", "name": "Antena 1 Madeira",  "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena1madeira80a/playlist.m3u8" },
+    { "id": "antena3madeira", "name": "Antena 3 Madeira",  "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena3madeira80a/playlist.m3u8" },
+    { "id": "rtpmundo_radio", "name": "RTP Mundo Rádio",   "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/rdpint80a/playlist.m3u8" },
+    { "id": "rtpafrica_radio","name": "RTP África Rádio",  "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/rdpafrica80a/playlist.m3u8" },
+    { "id": "lusitania",      "name": "RTP Lusitânia",     "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/lusitania80a/playlist.m3u8" },
+    { "id": "fado",           "name": "RTP Fado",          "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena1fado80a/playlist.m3u8" },
+    { "id": "jazzin",         "name": "RTP Jazzin",        "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena2jazzin80a/playlist.m3u8" },
+    { "id": "opera",          "name": "RTP Ópera",         "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena2opera80a/playlist.m3u8" },
+    { "id": "zigzag_radio",   "name": "RTP Zig Zag Rádio", "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/zigzag80a/playlist.m3u8" },
+    { "id": "vida",           "name": "RTP Vida",          "type": "radio", "group": "RTP Rádio", "region": "pt",    "source": "https://streaming-live.rtp.pt/liveradio/vida80a/playlist.m3u8" }
+  ]
+}
