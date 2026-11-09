@@ -28,6 +28,13 @@
     { "id": "jazzin",         "name": "RTP Jazzin",        "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena2jazzin80a/playlist.m3u8" },
     { "id": "opera",          "name": "RTP Ópera",         "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/antena2opera80a/playlist.m3u8" },
     { "id": "zigzag_radio",   "name": "RTP Zig Zag Rádio", "type": "radio", "group": "RTP Rádio", "region": "world", "source": "https://streaming-live.rtp.pt/liveradio/zigzag80a/playlist.m3u8" },
-    { "id": "vida",           "name": "RTP Vida",          "type": "radio", "group": "RTP Rádio", "region": "pt",    "source": "https://streaming-live.rtp.pt/liveradio/vida80a/playlist.m3u8" }
+    { "id": "vida",           "name": "RTP Vida",          "type": "radio", "group": "RTP Rádio", "region": "pt",    "source": "https://streaming-live.rtp.pt/liveradio/vida80a/playlist.m3u8" },
+
+    { "id": "comercial",   "name": "Rádio Comercial",   "type": "radio", "group": "Rádio", "region": "world", "source": "https://stream-hls.bauermedia.pt/comercial.aac/playlist.m3u8" },
+    { "id": "m80",         "name": "M80",               "type": "radio", "group": "Rádio", "region": "world", "source": "https://stream-hls.bauermedia.pt/m80.aac/playlist.m3u8" },
+    { "id": "smooth",      "name": "Smooth FM",         "type": "radio", "group": "Rádio", "region": "world", "source": "https://stream-hls.bauermedia.pt/smooth.aac/playlist.m3u8" },
+    { "id": "cidade",      "name": "Cidade FM",         "type": "radio", "group": "Rádio", "region": "world", "source": "https://stream-hls.bauermedia.pt/cidade.aac/playlist.m3u8" },
+    { "id": "observador",  "name": "Rádio Observador",  "type": "radio", "group": "Rádio", "region": "world", "source": "https://playerservices.streamtheworld.com/api/livestream-redirect/OBSERVADOR_ADP.m3u8" },
+    { "id": "tsf",         "name": "TSF",               "type": "radio", "group": "Rádio", "region": "world", "kind": "stream", "source": "https://tsfdirecto.tsf.pt/tsfdirecto.mp3" }
   ]
 }

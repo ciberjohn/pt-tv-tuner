@@ -7,6 +7,7 @@ type Chan = {
   type: 'tv' | 'radio';
   group: string;
   region: 'world' | 'pt';
+  kind?: 'hls' | 'stream';
 };
 
 const initials = (name: string) =>
@@ -26,7 +27,7 @@ const hueFrom = (s: string) => {
 
 export default function App() {
   const [channels, setChannels] = useState<Chan[]>([]);
-  const [showPt, setShowPt] = useState<boolean>(() => localStorage.getItem('pttv.showpt') === '1');
+  const [showPt, setShowPt] = useState<boolean>(() => localStorage.getItem('pttv.showpt') !== '0');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
   const [ready, setReady] = useState(false);
@@ -83,6 +84,23 @@ export default function App() {
       video.muted = false;
 
       const url = '/stream/' + ch.id;
+
+      if ((ch.kind || 'hls') === 'stream') {
+        video.src = '/live/' + ch.id;
+        video.muted = false;
+        video.addEventListener('error', () => setStatus('Estação indisponível neste momento.'), { once: true });
+        video
+          .play()
+          .then(() => {
+            setReady(true);
+            setStatus('');
+          })
+          .catch(() => {
+            setNeedGesture(true);
+            setStatus('Prima ▶ para iniciar.');
+          });
+        return;
+      }
 
       const onReady = () => {
         video

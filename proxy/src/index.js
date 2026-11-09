@@ -12,6 +12,7 @@
 import http from 'node:http';
 import { readFileSync } from 'node:fs';
 import { isIP } from 'node:net';
+import { Readable } from 'node:stream';
 
 const PORT = Number(process.env.PORT || 3000);
 const CHANNELS_FILE = process.env.CHANNELS_FILE || '/app/data/channels.json';
@@ -25,7 +26,7 @@ const MAX_PLAYLIST = 4 * 1024 * 1024;
 const MAX_SEGMENT = 64 * 1024 * 1024;
 
 // Only these registrable domains may be fetched (SSRF guard).
-const ALLOW = (process.env.ALLOW_HOSTS || 'rtp.pt,iol.pt,impresa.pt,githubusercontent.com')
+const ALLOW = (process.env.ALLOW_HOSTS || 'rtp.pt,iol.pt,impresa.pt,githubusercontent.com,bauermedia.pt,sharp-stream.com,streamtheworld.com,tsf.pt')
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
@@ -101,7 +102,13 @@ const toProxy = (abs) => '/seg?u=' + enc(abs);
 
 function absolutize(uri, base) {
   try {
-    return new URL(uri, base).href;
+    const abs = new URL(uri, base);
+    const b = new URL(base);
+    // Some broadcasters (e.g. bauermedia) carry a session token in the playlist
+    // query; a relative child URL would drop it and get a 403. Carry it forward
+    // when the child has no query of its own.
+    if (b.search && !abs.search && abs.host === b.host) abs.search = b.search;
+    return abs.href;
   } catch {
     return null;
   }
@@ -206,6 +213,45 @@ async function serveUrl(rawUrl, res, method) {
   }
 }
 
+// Streaming passthrough for non-HLS stations (ICY/MP3), piped rather than buffered.
+async function serveLive(rawUrl, res, method) {
+  try {
+    const { up } = await fetchFollow(rawUrl);
+    if (!up.ok || !up.body) throw new HttpError(502, 'upstream status ' + up.status);
+    let ct = up.headers.get('content-type') || 'audio/mpeg';
+    if (/aacp/i.test(ct)) ct = 'audio/aac';
+    res.writeHead(200, { 'Content-Type': ct, 'Cache-Control': 'no-cache', 'Accept-Ranges': 'none' });
+    if (method === 'HEAD') {
+      res.end();
+      return;
+    }
+    const body = Readable.fromWeb(up.body);
+    body.on('error', () => {
+      try {
+        res.destroy();
+      } catch {
+        /* gone */
+      }
+    });
+    res.on('close', () => {
+      try {
+        body.destroy();
+      } catch {
+        /* gone */
+      }
+    });
+    body.pipe(res);
+  } catch (e) {
+    const status = e instanceof HttpError ? e.status : 502;
+    if (!(e instanceof HttpError)) console.error('[proxy] live error:', e.message);
+    try {
+      send(res, status, { 'Content-Type': 'text/plain' }, status === 403 ? 'forbidden' : 'upstream error', method);
+    } catch {
+      /* gone */
+    }
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const method = req.method || 'GET';
   try {
@@ -230,6 +276,7 @@ const server = http.createServer(async (req, res) => {
         type: c.type,
         group: c.group,
         region: c.region,
+        kind: c.kind || 'hls',
       }));
       return send(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify(pub), method);
     }
@@ -256,6 +303,18 @@ const server = http.createServer(async (req, res) => {
         return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad u', method);
       }
       return await serveUrl(abs, res, method);
+    }
+
+    if (path.startsWith('/live/')) {
+      let id;
+      try {
+        id = decodeURIComponent(path.slice('/live/'.length));
+      } catch {
+        return send(res, 400, { 'Content-Type': 'text/plain' }, 'bad channel id', method);
+      }
+      const ch = BY_ID.get(id);
+      if (!ch) return send(res, 404, { 'Content-Type': 'text/plain' }, 'unknown channel', method);
+      return await serveLive(ch.source, res, method);
     }
 
     if (path === '/') return send(res, 200, { 'Content-Type': 'text/plain' }, 'PT TV Tuner proxy', method);
